@@ -111,7 +111,7 @@ export default function DashboardLayout({ children }) {
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white shadow-sm z-30 px-4">
         <div className="flex items-center justify-between h-full">
           <h1 className="text-xl font-bold" style={{ color: theme.text }}>
-            Finanças
+            MZFinanças
           </h1>
           <button
             onClick={toggleSidebar}
@@ -140,7 +140,7 @@ export default function DashboardLayout({ children }) {
               }`} 
               style={{ color: theme.text }}
             >
-              Finanças
+              MZFinanças
             </h1>
             {sidebarOpen && (
               <span className="text-sm text-gray-500 truncate">

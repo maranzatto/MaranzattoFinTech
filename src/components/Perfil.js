@@ -1,272 +1,221 @@
-import { useState, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useState } from 'react';
 import { 
-  UserCircleIcon,
+  UserCircleIcon, 
+  KeyIcon, 
+  BellIcon, 
+  SwatchIcon,
   CameraIcon,
-  PencilIcon
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
+import { Input } from './common/Input';
+import { Button } from './common/Button';
+import { Card } from './common/Card';
 import { useTheme } from '../contexts/ThemeContext';
-import { 
-  DateInput, 
-  CpfInput, 
-  PhoneInput, 
-  PisInput, 
-  CurrencyInput 
-} from './common/MaskedInput';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Perfil() {
   const { theme } = useTheme();
-  const { user } = useAuth();
-  const fileInputRef = useRef(null);
-  
-  const [perfil, setPerfil] = useState({
-    nome: 'Usuário Exemplo',
-    email: user?.email || 'usuario@exemplo.com',
-    telefone: '(11) 99999-9999',
-    dataNascimento: '1990-01-01',
-    pis: '123.45678.90-1',
-    cpf: '123.456.789-00',
-    profissao: 'Desenvolvedor',
-    empresa: 'Empresa XYZ',
-    salarioBase: '5000',
+  const { getCurrentUsername } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('perfil');
+
+  const [profileData, setProfileData] = useState({
+    nome: 'João Silva',
+    email: 'joao@exemplo.com',
+    telefone: '(11) 98765-4321',
+    cargo: 'Gerente Financeiro',
+    empresa: 'MZFinanças',
     foto: null
   });
 
-  const [editando, setEditando] = useState(false);
-  const [novosDados, setNovosDados] = useState(perfil);
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    smsNotifications: false,
+    pushNotifications: true,
+    weeklyReport: true,
+    monthlyReport: true
+  });
 
-  const handleFotoClick = () => {
-    fileInputRef.current?.click();
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    // Simula atualização
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setSuccessMessage('Perfil atualizado com sucesso!');
+    setLoading(false);
+    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
-  const handleFotoChange = (event) => {
-    const file = event.target.files?.[0];
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPerfil(prev => ({ ...prev, foto: reader.result }));
+        setProfileData(prev => ({ ...prev, foto: reader.result }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSalvar = () => {
-    setPerfil(novosDados);
-    setEditando(false);
-  };
-
-  const formatarData = (data) => {
-    if (!data) return '';
-    const [ano, mes, dia] = data.split('-');
-    return `${dia}/${mes}/${ano}`;
-  };
-
-  const parseData = (data) => {
-    if (!data) return '';
-    const [dia, mes, ano] = data.split('/');
-    return `${ano}-${mes}-${dia}`;
-  };
-
   return (
     <div className="space-y-6">
-      <div className="bg-glass backdrop-blur-theme rounded-theme shadow-lg p-6">
-        {/* Cabeçalho com Foto */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="relative group">
-            <div 
-              className="w-32 h-32 rounded-full overflow-hidden border-4 cursor-pointer group-hover:opacity-90 transition-opacity"
-              style={{ borderColor: theme.primary }}
-              onClick={handleFotoClick}
-            >
-              {perfil.foto ? (
-                <img 
-                  src={perfil.foto} 
-                  alt="Foto de perfil" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <UserCircleIcon 
-                  className="w-full h-full text-gray-400"
-                />
-              )}
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity">
-                <CameraIcon className="h-8 w-8 text-white" />
+      <Card className="overflow-hidden">
+        {/* Header do Perfil */}
+        <div className="p-6 bg-primary/5">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
+                {profileData.foto ? (
+                  <img 
+                    src={profileData.foto} 
+                    alt="Foto de perfil" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <UserCircleIcon className="w-full h-full text-gray-400" />
+                )}
               </div>
+              <label className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <CameraIcon className="w-5 h-5 text-gray-600" />
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+              </label>
             </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFotoChange}
-              accept="image/*"
-              className="hidden"
-            />
+            <div className="text-center md:text-left">
+              <h1 className="text-2xl font-bold text-gray-900">{profileData.nome}</h1>
+              <p className="text-gray-600">{profileData.cargo}</p>
+            </div>
           </div>
-          <h2 className="text-2xl font-bold mt-4 text-text">{perfil.nome}</h2>
-          <p className="text-secondary">{perfil.profissao}</p>
         </div>
 
-        {/* Informações do Perfil */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-text">Informações Pessoais</h3>
-            <button
-              onClick={() => setEditando(!editando)}
-              className="flex items-center text-primary hover:text-primary-dark"
-            >
-              <PencilIcon className="h-5 w-5 mr-1" />
-              {editando ? 'Cancelar' : 'Editar'}
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Campos do formulário */}
-            {editando ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">Nome</label>
-                  <input
-                    type="text"
-                    value={novosDados.nome}
-                    onChange={(e) => setNovosDados({ ...novosDados, nome: e.target.value })}
-                    className="w-full rounded-theme border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={novosDados.email}
-                    onChange={(e) => setNovosDados({ ...novosDados, email: e.target.value })}
-                    className="w-full rounded-theme border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">Telefone</label>
-                  <PhoneInput
-                    value={novosDados.telefone}
-                    onChange={(e) => setNovosDados({ ...novosDados, telefone: e.target.value })}
-                    className="w-full rounded-theme border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">Data de Nascimento</label>
-                  <DateInput
-                    value={formatarData(novosDados.dataNascimento)}
-                    onChange={(e) => setNovosDados({ 
-                      ...novosDados, 
-                      dataNascimento: parseData(e.target.value)
-                    })}
-                    className="w-full rounded-theme border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">PIS</label>
-                  <PisInput
-                    value={novosDados.pis}
-                    onChange={(e) => setNovosDados({ ...novosDados, pis: e.target.value })}
-                    className="w-full rounded-theme border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">CPF</label>
-                  <CpfInput
-                    value={novosDados.cpf}
-                    onChange={(e) => setNovosDados({ ...novosDados, cpf: e.target.value })}
-                    className="w-full rounded-theme border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">Profissão</label>
-                  <input
-                    type="text"
-                    value={novosDados.profissao}
-                    onChange={(e) => setNovosDados({ ...novosDados, profissao: e.target.value })}
-                    className="w-full rounded-theme border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">Empresa</label>
-                  <input
-                    type="text"
-                    value={novosDados.empresa}
-                    onChange={(e) => setNovosDados({ ...novosDados, empresa: e.target.value })}
-                    className="w-full rounded-theme border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">Salário Base</label>
-                  <CurrencyInput
-                    value={novosDados.salarioBase}
-                    onValueChange={(value) => setNovosDados({ ...novosDados, salarioBase: value })}
-                    className="w-full rounded-theme border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
-                    required
-                  />
-                </div>
-              </>
-            ) : (
-              // Visualização das informações
-              <>
-                <div>
-                  <p className="text-sm text-secondary">Nome</p>
-                  <p className="text-text">{perfil.nome}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-secondary">Email</p>
-                  <p className="text-text">{perfil.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-secondary">Telefone</p>
-                  <p className="text-text">{perfil.telefone}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-secondary">Data de Nascimento</p>
-                  <p className="text-text">{formatarData(perfil.dataNascimento)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-secondary">PIS</p>
-                  <p className="text-text">{perfil.pis}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-secondary">CPF</p>
-                  <p className="text-text">{perfil.cpf}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-secondary">Profissão</p>
-                  <p className="text-text">{perfil.profissao}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-secondary">Empresa</p>
-                  <p className="text-text">{perfil.empresa}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-secondary">Salário Base</p>
-                  <p className="text-text">
-                    {typeof perfil.salarioBase === 'number' 
-                      ? `R$ ${perfil.salarioBase.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` 
-                      : perfil.salarioBase}
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Botão Salvar */}
-          {editando && (
-            <div className="flex justify-end mt-6">
+        {/* Navegação das Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex gap-4 px-6">
+            {['perfil', 'notificações', 'segurança'].map((tab) => (
               <button
-                onClick={handleSalvar}
-                className="px-4 py-2 bg-primary text-white rounded-theme hover:bg-opacity-90 transition-colors"
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`py-4 px-2 border-b-2 transition-colors capitalize ${
+                  activeTab === tab 
+                    ? 'border-primary text-primary font-medium'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
               >
-                Salvar Alterações
+                {tab}
               </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Conteúdo */}
+        <div className="p-6">
+          {successMessage && (
+            <div className="mb-6 p-4 bg-success/10 text-success rounded-theme flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {successMessage}
             </div>
           )}
+
+          {activeTab === 'perfil' && (
+            <form onSubmit={handleUpdateProfile} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="form-label">Nome Completo</label>
+                  <Input
+                    type="text"
+                    value={profileData.nome}
+                    onChange={(e) => setProfileData({ ...profileData, nome: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Email</label>
+                  <Input
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Telefone</label>
+                  <Input
+                    type="tel"
+                    value={profileData.telefone}
+                    onChange={(e) => setProfileData({ ...profileData, telefone: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Cargo</label>
+                  <Input
+                    type="text"
+                    value={profileData.cargo}
+                    onChange={(e) => setProfileData({ ...profileData, cargo: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="submit" loading={loading}>
+                  Salvar Alterações
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {activeTab === 'notificações' && (
+            <div className="space-y-6">
+              {Object.entries(notificationSettings).map(([key, value]) => (
+                <label key={key} className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">
+                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  </span>
+                  <div className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={value}
+                      onChange={() => setNotificationSettings(prev => ({
+                        ...prev,
+                        [key]: !prev[key]
+                      }))}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'segurança' && (
+            <form className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="form-label">Senha Atual</label>
+                  <Input type="password" placeholder="••••••••" />
+                </div>
+                <div>
+                  <label className="form-label">Nova Senha</label>
+                  <Input type="password" placeholder="••••••••" />
+                </div>
+                <div>
+                  <label className="form-label">Confirmar Nova Senha</label>
+                  <Input type="password" placeholder="••••••••" />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="submit">
+                  Atualizar Senha
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 } 

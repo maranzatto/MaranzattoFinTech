@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import ForgotPassword from './components/ForgotPassword';
+import Register from './components/Register';
 
 // Lazy loading dos componentes
 const Login = lazy(() => import('./components/Login'));
@@ -122,6 +124,18 @@ function App() {
                     <PrivateRoute>
                       <Perfil />
                     </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/forgot-password"
+                  element={
+                    <ForgotPassword />
+                  }
+                />
+                <Route
+                  path="/register"
+                  element={
+                    <Register />
                   }
                 />
                 <Route 

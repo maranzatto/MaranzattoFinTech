@@ -1,63 +1,77 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { auth } from '../config/firebase';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from 'firebase/auth';
 
 const AuthContext = createContext({});
+
+// Usuários mock para teste
+const MOCK_USERS = {
+  'admin': {
+    password: '1234',
+    name: 'Administrador',
+    role: 'admin'
+  },
+  'usuario': {
+    password: '1234',
+    name: 'Usuário Teste',
+    role: 'user'
+  }
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verifica se há um usuário no localStorage ao carregar
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    // Verifica se há um usuário salvo no localStorage
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
     }
-
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-      }
-      setLoading(false);
-    });
-
-    return unsubscribe;
+    setLoading(false);
   }, []);
 
-  const signup = (email, password) => {
-    return createUserWithEmailAndPassword(auth, email, password);
-  };
+  const login = async (username, password) => {
+    try {
+      const userFound = MOCK_USERS[username];
+      
+      if (!userFound || userFound.password !== password) {
+        throw new Error('Usuário ou senha inválidos');
+      }
 
-  const login = async (email, password) => {
-    // Verifica se é o login admin
-    if (email === 'admin' && password === '1234') {
-      const adminUser = { email: 'admin', role: 'admin' };
-      localStorage.setItem('user', JSON.stringify(adminUser));
-      setUser(adminUser);
-      return Promise.resolve();
+      const userData = {
+        username,
+        name: userFound.name,
+        role: userFound.role
+      };
+
+      // Salva os dados do usuário
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('authToken', 'mock-token-' + Date.now());
+      
+      return userData;
+    } catch (error) {
+      console.error('Erro no login:', error);
+      throw new Error('Credenciais inválidas');
     }
-    
-    // Se não for admin, usa o Firebase
-    return signInWithEmailAndPassword(auth, email, password);
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    return signOut(auth);
+  const logout = async () => {
+    try {
+      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      throw error;
+    }
   };
 
   const value = {
     user,
-    signup,
+    loading,
     login,
-    logout
+    logout,
+    getCurrentUsername: () => user?.name || ''
   };
 
   return (

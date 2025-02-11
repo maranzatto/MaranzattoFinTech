@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   HomeIcon, 
   WalletIcon, 
@@ -10,9 +10,13 @@ import {
   Cog6ToothIcon,
   UserIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { NotificationDropdown } from '../common/NotificationDropdown';
+import { BreadCrumb } from '../common/BreadCrumb';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
@@ -28,7 +32,10 @@ export default function DashboardLayout({ children }) {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme } = useTheme();
+  const { logout, getCurrentUsername } = useAuth();
+  const [notifications, setNotifications] = useState([]);
 
   // Detecta se é dispositivo móvel
   useEffect(() => {
@@ -44,11 +51,49 @@ export default function DashboardLayout({ children }) {
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
+  // Simula a verificação de contas próximas ao vencimento
+  useEffect(() => {
+    const checkUpcomingBills = () => {
+      // Aqui você faria uma chamada à API para buscar as contas
+      // Por enquanto, vamos simular algumas notificações
+      const mockNotifications = [
+        {
+          id: 1,
+          title: 'Conta próxima ao vencimento',
+          message: 'Aluguel - Vence em 3 dias (R$ 1.500,00)',
+          timeAgo: '1h atrás'
+        },
+        {
+          id: 2,
+          title: 'Conta vencendo hoje',
+          message: 'Internet - Vence hoje (R$ 100,00)',
+          timeAgo: '2h atrás'
+        }
+      ];
+      setNotifications(mockNotifications);
+    };
+
+    checkUpcomingBills();
+    // Em produção, você pode querer atualizar periodicamente
+    const interval = setInterval(checkUpcomingBills, 5 * 60 * 1000); // A cada 5 minutos
+
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleSidebar = () => {
     if (isMobile) {
       setMobileMenuOpen(!mobileMenuOpen);
     } else {
       setSidebarOpen(!sidebarOpen);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
     }
   };
 
@@ -84,19 +129,25 @@ export default function DashboardLayout({ children }) {
           ${isMobile ? 'w-64' : sidebarOpen ? 'w-64' : 'w-20'} 
           ${isMobile ? (mobileMenuOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
           ${isMobile ? 'bg-white shadow-lg' : 'bg-glass backdrop-blur-theme'}
-          border-r border-gray-200/20
-          ${isMobile ? 'top-0' : 'top-0'}`}
+          border-r border-gray-200/20`}
       >
         {/* Header Desktop */}
         <div className={`flex h-16 items-center justify-between px-4 ${isMobile ? 'mt-0' : 'mt-0'}`}>
-          <h1 
-            className={`text-xl font-bold transition-all duration-200 ${
-              (isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'
-            }`} 
-            style={{ color: theme.text }}
-          >
-            Finanças
-          </h1>
+          <div className="flex flex-col">
+            <h1 
+              className={`text-xl font-bold transition-all duration-200 ${
+                (isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'
+              }`} 
+              style={{ color: theme.text }}
+            >
+              Finanças
+            </h1>
+            {sidebarOpen && (
+              <span className="text-sm text-gray-500 truncate">
+                Olá, {getCurrentUsername()}
+              </span>
+            )}
+          </div>
           <button
             onClick={toggleSidebar}
             className="p-2 rounded-theme hover:bg-opacity-10 transition-colors"
@@ -112,50 +163,81 @@ export default function DashboardLayout({ children }) {
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="mt-5 flex-1 px-2 space-y-1 mb-8">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                onClick={() => isMobile && setMobileMenuOpen(false)}
-                className={`group flex items-center px-2 py-2 text-base font-medium rounded-theme transition-all
-                  ${isActive ? 'text-white' : 'hover:bg-opacity-10'}
-                  ${(isMobile || sidebarOpen) ? '' : 'justify-center'}`}
-                style={{
-                  backgroundColor: isActive ? theme.primary : `${theme.primary}00`,
-                  color: isActive ? 'white' : theme.text,
-                }}
-                title={(!isMobile && !sidebarOpen) ? item.name : ''}
-              >
-                <item.icon
-                  className={`flex-shrink-0 h-6 w-6 transition-all ${
-                    isActive ? 'text-white' : ''
-                  } ${(isMobile || sidebarOpen) ? 'mr-4' : 'mr-0'}`}
-                />
-                <span 
-                  className={`transition-all duration-200 ${
-                    (isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'
-                  }`}
+        {/* Container para navegação e botão de logout */}
+        <div className="flex flex-col flex-1 justify-between">
+          {/* Navigation */}
+          <nav className="mt-5 px-2 space-y-1">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={() => isMobile && setMobileMenuOpen(false)}
+                  className={`group flex items-center px-2 py-2 text-base font-medium rounded-theme transition-all
+                    ${isActive ? 'text-white' : 'hover:bg-opacity-10'}
+                    ${(isMobile || sidebarOpen) ? '' : 'justify-center'}`}
+                  style={{
+                    backgroundColor: isActive ? theme.primary : `${theme.primary}00`,
+                    color: isActive ? 'white' : theme.text,
+                  }}
+                  title={(!isMobile && !sidebarOpen) ? item.name : ''}
                 >
-                  {item.name}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
+                  <item.icon
+                    className={`flex-shrink-0 h-6 w-6 transition-all ${
+                      isActive ? 'text-white' : ''
+                    } ${(isMobile || sidebarOpen) ? 'mr-4' : 'mr-0'}`}
+                  />
+                  <span 
+                    className={`transition-all duration-200 ${
+                      (isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'
+                    }`}
+                  >
+                    {item.name}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Botão de Logout */}
+          <div className="p-2 mb-4">
+            <button
+              onClick={handleLogout}
+              className={`w-full group flex items-center px-2 py-2 text-base font-medium rounded-theme transition-all
+                hover:bg-danger hover:text-white
+                ${(isMobile || sidebarOpen) ? '' : 'justify-center'}`}
+              style={{ color: theme.danger }}
+            >
+              <ArrowRightOnRectangleIcon
+                className={`flex-shrink-0 h-6 w-6 transition-all group-hover:text-white
+                  ${(isMobile || sidebarOpen) ? 'mr-4' : 'mr-0'}`}
+              />
+              <span 
+                className={`transition-all duration-200 group-hover:text-white
+                  ${(isMobile || sidebarOpen) ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'}`}
+              >
+                Sair
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Conteúdo principal */}
       <div 
-        className={`flex-1 transition-all duration-200 
+        className={`flex-1 transition-all duration-200 w-full
           ${isMobile ? 'ml-0 mt-16' : sidebarOpen ? 'ml-64' : 'ml-20'}
         `}
       >
-        <main className="p-6 pb-12 h-[calc(100vh-4rem)] md:h-screen overflow-auto">
-          <div className="max-w-7xl mx-auto h-full space-y-8 pb-8">
+        <main className="p-6 pb-12 h-[calc(100vh-4rem)] md:h-screen overflow-auto w-full">
+          {/* Header com Breadcrumb e Notificações */}
+          <div className="flex justify-between items-center mb-6">
+            <BreadCrumb />
+            <NotificationDropdown notifications={notifications} />
+          </div>
+
+          <div className="max-w-full mx-auto h-full space-y-8 pb-8">
             {children}
           </div>
         </main>

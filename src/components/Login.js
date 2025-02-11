@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { Input } from './common/Input';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -13,60 +15,74 @@ export default function Login() {
     e.preventDefault();
     try {
       setError('');
-      await login(email, password);
+      setLoading(true);
+      await login(username, password);
       navigate('/dashboard');
     } catch (err) {
-      setError('Falha ao fazer login. Verifique suas credenciais.');
+      setError(err.message || 'Falha no login. Verifique suas credenciais.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <h2 className="text-center text-3xl font-extrabold text-gray-900">
-          Login
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="bg-glass backdrop-blur-theme rounded-theme p-8 max-w-md w-full">
+        <h2 className="text-2xl font-bold text-text mb-6">Login</h2>
+        
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="bg-danger/10 text-danger p-3 rounded-theme mb-4">
             {error}
           </div>
         )}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="sr-only">
-              Email/Usuário
+            <label className="block text-sm font-medium text-text mb-2">
+              Usuário
             </label>
-            <input
-              id="email"
+            <Input
               type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-              placeholder="Email ou usuário"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
+              placeholder="Digite seu usuário"
             />
           </div>
+
           <div>
-            <label htmlFor="password" className="sr-only">
+            <label className="block text-sm font-medium text-text mb-2">
               Senha
             </label>
-            <input
-              id="password"
+            <Input
               type="password"
-              required
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-              placeholder="Senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              placeholder="Digite sua senha"
             />
           </div>
+
           <button
             type="submit"
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            disabled={loading}
+            className="w-full py-2 px-4 bg-primary text-white rounded-theme 
+              hover:bg-opacity-90 transition-colors disabled:opacity-50"
           >
-            Entrar
+            {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
+
+        {/* Informações de login para teste */}
+        <div className="mt-4 p-4 bg-primary/5 rounded-theme">
+          <p className="text-sm text-gray-600 mb-2">Credenciais para teste:</p>
+          <ul className="text-sm text-gray-600 space-y-1">
+            <li>Admin: usuario: <strong>admin</strong> / senha: <strong>1234</strong></li>
+            <li>Usuário: usuario: <strong>usuario</strong> / senha: <strong>1234</strong></li>
+          </ul>
+        </div>
       </div>
     </div>
   );

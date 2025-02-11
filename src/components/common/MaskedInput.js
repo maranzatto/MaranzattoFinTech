@@ -1,3 +1,6 @@
+import InputMask from 'react-input-mask';
+import { NumericFormat } from 'react-number-format';
+
 // Funções auxiliares de formatação
 const formatters = {
   phone: (value) => {
@@ -99,140 +102,67 @@ const validators = {
 
 // Componentes de Input
 export function DateInput({ value, onChange, className, ...props }) {
-  const handleChange = (e) => {
-    let newValue = e.target.value.replace(/\D/g, '');
-    
-    if (newValue.length > 8) {
-      newValue = newValue.substr(0, 8);
-    }
-    
-    const formattedValue = formatters.date(newValue);
-    onChange({ target: { value: formattedValue } });
-  };
-
   return (
-    <input
-      type="text"
+    <InputMask
+      mask="99/99/9999"
       value={value}
-      onChange={handleChange}
-      className={className}
+      onChange={onChange}
+      className={`input-theme ${className || ''}`}
       placeholder="DD/MM/AAAA"
-      maxLength={10}
       {...props}
     />
   );
 }
 
-export function CpfInput({ value, onChange, className, onValidate, ...props }) {
-  const handleChange = (e) => {
-    let newValue = e.target.value.replace(/\D/g, '');
-    
-    if (newValue.length > 11) {
-      newValue = newValue.substr(0, 11);
-    }
-    
-    const formattedValue = formatters.cpf(newValue);
-    onChange({ target: { value: formattedValue } });
-    
-    if (onValidate) {
-      onValidate(validators.cpf(formattedValue));
-    }
-  };
-
+export function CpfInput({ value, onChange, className, ...props }) {
   return (
-    <input
-      type="text"
+    <InputMask
+      mask="999.999.999-99"
       value={value}
-      onChange={handleChange}
-      className={className}
-      placeholder="000.000.000-00"
-      maxLength={14}
+      onChange={onChange}
+      className={`input-theme ${className || ''}`}
       {...props}
     />
   );
 }
 
 export function PhoneInput({ value, onChange, className, ...props }) {
-  const handleChange = (e) => {
-    let newValue = e.target.value.replace(/\D/g, '');
-    
-    if (newValue.length > 11) {
-      newValue = newValue.substr(0, 11);
-    }
-    
-    const formattedValue = formatters.phone(newValue);
-    onChange({ target: { value: formattedValue } });
-  };
-
   return (
-    <input
-      type="tel"
+    <InputMask
+      mask="(99) 99999-9999"
       value={value}
-      onChange={handleChange}
-      className={className}
-      placeholder="(00) 00000-0000"
-      maxLength={15}
+      onChange={onChange}
+      className={`input-theme ${className || ''}`}
       {...props}
     />
   );
 }
 
 export function PisInput({ value, onChange, className, ...props }) {
-  const handleChange = (e) => {
-    let newValue = e.target.value.replace(/\D/g, '');
-    
-    if (newValue.length > 11) {
-      newValue = newValue.substr(0, 11);
-    }
-    
-    const formattedValue = formatters.pis(newValue);
-    onChange({ target: { value: formattedValue } });
-  };
-
   return (
-    <input
-      type="text"
+    <InputMask
+      mask="999.99999.99-9"
       value={value}
-      onChange={handleChange}
-      className={className}
-      placeholder="000.00000.00-0"
-      maxLength={14}
+      onChange={onChange}
+      className={`input-theme ${className || ''}`}
       {...props}
     />
   );
 }
 
 export function CurrencyInput({ value, onValueChange, className, ...props }) {
-  const handleChange = (e) => {
-    const inputValue = e.target.value.replace(/\D/g, '');
-    const numberValue = Number(inputValue) / 100;
-    onValueChange(numberValue);
-  };
-
-  const handleKeyDown = (e) => {
-    // Permite: backspace, delete, tab, escape, enter e .
-    if ([46, 8, 9, 27, 13, 110, 190].indexOf(e.keyCode) !== -1 ||
-        // Permite: Ctrl+A, Command+A
-        (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
-        // Permite: home, end, left, right, down, up
-        (e.keyCode >= 35 && e.keyCode <= 40)) {
-      return;
-    }
-    // Garante que é um número e impede o evento keypress
-    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) &&
-        (e.keyCode < 96 || e.keyCode > 105)) {
-      e.preventDefault();
-    }
-  };
-
   return (
-    <input
-      type="text"
-      value={formatters.currency(value)}
-      onChange={handleChange}
-      onKeyDown={handleKeyDown}
-      className={className}
-      placeholder="R$ 0,00"
+    <NumericFormat
+      value={value}
+      onValueChange={(values) => {
+        onValueChange(values.floatValue);
+      }}
+      thousandSeparator="."
+      decimalSeparator=","
+      prefix="R$ "
+      decimalScale={2}
+      fixedDecimalScale
+      className={`input-theme ${className || ''}`}
       {...props}
     />
   );

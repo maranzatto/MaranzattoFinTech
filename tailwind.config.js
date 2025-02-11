@@ -32,5 +32,41 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function({ addComponents }) {
+      addComponents({
+        '.input-theme': {
+          'width': '100%',
+          'padding': '0.5rem 1rem',
+          'borderRadius': 'var(--border-radius)',
+          'border': '1px solid #e5e7eb',
+          'backgroundColor': 'rgba(255, 255, 255, 0.5)',
+          'transition': 'all 0.2s ease',
+          'outline': 'none',
+          '-webkit-appearance': 'none',
+          '-moz-appearance': 'none',
+          'appearance': 'none',
+          '&:focus': {
+            'outline': 'none',
+            'ring': '0',
+            'borderColor': 'var(--primary)',
+            'boxShadow': '0 0 0 2px rgba(var(--primary-rgb), 0.1)',
+          },
+          '&:focus-visible': {
+            'outline': 'none',
+          },
+          '&:-webkit-autofill': {
+            'WebkitBoxShadow': '0 0 0 30px white inset',
+          },
+        },
+        '.input-error': {
+          'borderColor': 'var(--danger)',
+          '&:focus': {
+            'borderColor': 'var(--danger)',
+            'boxShadow': '0 0 0 2px rgba(var(--danger-rgb), 0.1)',
+          },
+        }
+      })
+    }
+  ],
 } 
